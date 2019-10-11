@@ -126,5 +126,11 @@ extension HomeViewController: HeaderViewDelegate {
     func didSelectNode(_ node: Node) {
         viewModel.selectNode(node)
     }
+    
+    func didCollapseSelection(_ node: Node, isCollapsed: Bool) {
+        if let sectionIndex = viewModel.collapseSection(for: node, isCollapsed: isCollapsed) {
+            tableView.reloadSections(IndexSet(integer: sectionIndex), with: .automatic)
+        }
+    }
 }
 

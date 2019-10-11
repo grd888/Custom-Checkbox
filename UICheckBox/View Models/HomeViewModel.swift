@@ -46,10 +46,10 @@ class HomeViewModel {
                 Node(id: 6, title: "item 3", subtitle: "3   DEF", isLastNode: true),
             ])
         ])
-        initTableData(data)
+        updateTableData()
     }
     
-    private func initTableData(_ data: Node) {
+    private func updateTableData() {
         var rows = [Row]()
         for level2node in data.children {
             let row = Row(node: level2node, level: .level2)
@@ -64,16 +64,25 @@ class HomeViewModel {
         sections = [section]
     }
     
-    
-    func hideAllChildren(node: Node) {
-        data.children = []
-        initTableData(data)
-    }
-    
     func selectNode(_ node: Node) {
         node.toggle()
-        initTableData(data)
+        updateTableData()
         dataDidChange?()
+    }
+    
+    func collapseSection(for node: Node, isCollapsed: Bool) -> Int? {
+        guard let sectionIndex = sections.firstIndex(where: { $0.node.id == node.id }) else {
+            return nil
+        }
+        let section = sections[sectionIndex]
+        if (isCollapsed) {
+            section.rows = []
+        } else {
+            updateTableData()
+        }
+        section.isCollapsed = isCollapsed
+        
+        return sectionIndex
     }
 }
 
@@ -82,7 +91,7 @@ class Section {
     var rows = [Row]()
     var title: String
     var checkState: CheckState = .unselected
-    var isExpanded = true
+    var isCollapsed = false
     init(node: Node, rows: [Row]) {
         self.node = node
         self.title = node.title

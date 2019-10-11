@@ -10,11 +10,20 @@ import UIKit
 
 protocol HeaderViewDelegate: NSObject {
     func didSelectNode(_ node: Node)
+    func didCollapseSelection(_ node: Node, isCollapsed: Bool)
 }
 
 class HeaderView: UIView {
     var checkbox: UICheckBox = {
        return UICheckBox()
+    }()
+    
+    var chevronImage: UIImageView = {
+        let image = UIImage.Icons.Chevron.expanded
+        var imageView = UIImageView(image: image)
+        imageView.tintColor = .white
+        imageView.isUserInteractionEnabled = true
+        return imageView
     }()
     
     var titleLabel: UILabel = {
@@ -26,7 +35,12 @@ class HeaderView: UIView {
     
     var node: Node!
     var delegate: HeaderViewDelegate?
-
+    var isCollapsed = false {
+        didSet {
+            updateChevronImage()
+        }
+    }
+    
     init() {
         super.init(frame: .zero)
         setupView()
@@ -40,48 +54,64 @@ class HeaderView: UIView {
         backgroundColor = .black
         addSubview(checkbox)
         addSubview(titleLabel)
+        addSubview(chevronImage)
         
-        let gesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        gesture.cancelsTouchesInView = true
-        addGestureRecognizer(gesture)
+        chevronImage.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleCollapseButtonTap)))
+        addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
         isUserInteractionEnabled = true
+        
         setupConstraints()
     }
     
-
     @objc func handleTap(_ gesture: UITapGestureRecognizer) {
         delegate?.didSelectNode(node)
+    }
+    
+    @objc func handleCollapseButtonTap(_ gesture: UITapGestureRecognizer) {
+        let isCollapsed = !self.isCollapsed
+        animateArrow(collapsed: isCollapsed) {[unowned self] _ in
+            self.delegate?.didCollapseSelection(self.node, isCollapsed: isCollapsed)
+        }
     }
     
     func setupConstraints() {
         checkbox.translatesAutoresizingMaskIntoConstraints = false
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
-        
+        chevronImage.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
             checkbox.heightAnchor.constraint(equalToConstant: 36.0),
             checkbox.widthAnchor.constraint(equalToConstant: 36.0),
             checkbox.leftAnchor.constraint(equalTo: leftAnchor, constant: 16.0),
             checkbox.centerYAnchor.constraint(equalTo: centerYAnchor),
+            
             titleLabel.leftAnchor.constraint(equalTo: checkbox.rightAnchor, constant: 16.0),
-            titleLabel.rightAnchor.constraint(equalTo: rightAnchor, constant: -16.0),
             titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: 16.0),
             titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -16.0),
             
-            
+            chevronImage.leftAnchor.constraint(equalTo: titleLabel.rightAnchor, constant: 16.0),
+            chevronImage.rightAnchor.constraint(equalTo: rightAnchor, constant: -16.0),
+            chevronImage.centerYAnchor.constraint(equalTo: centerYAnchor),
+            chevronImage.widthAnchor.constraint(equalToConstant: 30),
+            chevronImage.heightAnchor.constraint(equalToConstant: 30),
         ])
     }
     
     func configure(with section: Section) {
         node = section.node
         titleLabel.text = section.title
+        isCollapsed = section.isCollapsed
         checkbox.setCheckState(section.checkState)
     }
     
-    private func animateArrow(_ view: UIView, expand: Bool) {
-        let transform = expand ? CGAffineTransform(rotationAngle: CGFloat(Double.pi)) : CGAffineTransform.identity
-        UIView.animate(withDuration: 0.5) {
-            view.transform = transform
-        }
+    private func animateArrow(collapsed: Bool, completion: @escaping ((Bool)->Void)) {
+        let transform = collapsed ? CGAffineTransform(rotationAngle: CGFloat(Double.pi)) : CGAffineTransform(rotationAngle: CGFloat(Double.pi) * 1.01)
+        UIView.animate(withDuration: 0.5, animations: {
+            self.chevronImage.transform = transform
+        }, completion: completion)
+    }
+    
+    private func updateChevronImage() {
+        chevronImage.image = isCollapsed ? UIImage.Icons.Chevron.collapsed : UIImage.Icons.Chevron.expanded
     }
 }
