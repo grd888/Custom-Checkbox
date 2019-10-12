@@ -16,6 +16,14 @@ class Level2Cell: UITableViewCell {
         return view
     }()
     
+    var chevronImage: UIImageView = {
+        let image = UIImage.Icons.Chevron.down
+        var imageView = UIImageView(image: image)
+        imageView.tintColor = .white
+        imageView.isUserInteractionEnabled = true
+        return imageView
+    }()
+    
     var checkbox: UICheckBox = {
         return UICheckBox()
     }()
@@ -40,6 +48,14 @@ class Level2Cell: UITableViewCell {
     }
     
     var row: Row!
+    var isCollapsed = false {
+        didSet {
+            if !chevronImage.isHidden {
+                updateChevronImage()
+            }
+        }
+    }
+    weak var delegate: NodeSelectionDelegate?
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -60,6 +76,9 @@ class Level2Cell: UITableViewCell {
         containerView.addSubview(checkbox)
         containerView.addSubview(levelTitleLabel)
         containerView.addSubview(verticalLine)
+        containerView.addSubview(chevronImage)
+        
+        chevronImage.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleCollapseButtonTap)))
         
         setupConstraints()
     }
@@ -68,6 +87,7 @@ class Level2Cell: UITableViewCell {
         setupContainerConstraints()
         setupCheckboxContstraints()
         setupLabelConstraints()
+        setupChevronConstraints()
         setupVerticalLineConstraints()
     }
     
@@ -105,18 +125,49 @@ class Level2Cell: UITableViewCell {
         levelTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
             levelTitleLabel.leftAnchor.constraint(equalTo: checkbox.rightAnchor, constant: 16.0),
-            levelTitleLabel.rightAnchor.constraint(equalTo: containerView.rightAnchor, constant: -16.0),
             levelTitleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 16.0),
             levelTitleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16.0),
         ])
     }
     
+    private func setupChevronConstraints() {
+        chevronImage.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            chevronImage.leftAnchor.constraint(equalTo: levelTitleLabel.rightAnchor, constant: 16.0),
+            chevronImage.rightAnchor.constraint(equalTo: rightAnchor, constant: -16.0),
+            chevronImage.centerYAnchor.constraint(equalTo: centerYAnchor),
+            chevronImage.widthAnchor.constraint(equalToConstant: 30),
+            chevronImage.heightAnchor.constraint(equalToConstant: 30),
+            
+        ])
+    }
+    
     func configure(with row: Row) {
         self.row = row
-        
+        chevronImage.isHidden = !row.node.hasChildren
+        isCollapsed = !row.node.hasActiveChildren()
         levelTitleLabel.text = row.title
         checkbox.setCheckState(row.checkState)
-        showTail = row.showsTail
+        showTail = row.showsTail && row.node.hasActiveChildren()
+    }
+    
+    @objc func handleCollapseButtonTap(_ gesture: UITapGestureRecognizer) {
+        let isCollapsed = !self.isCollapsed
+        animateArrow(collapsed: isCollapsed) {[unowned self] _ in
+            self.delegate?.didCollapseSelection(self.node, isCollapsed: isCollapsed)
+        }
+    }
+    
+    private func animateArrow(collapsed: Bool, completion: @escaping ((Bool)->Void)) {
+        let transform = collapsed ? CGAffineTransform(rotationAngle: CGFloat(Double.pi)) : CGAffineTransform(rotationAngle: CGFloat(Double.pi) * 1.01)
+        UIView.animate(withDuration: 0.5, animations: {
+            self.chevronImage.transform = transform
+        }, completion: completion)
+    }
+    
+    private func updateChevronImage() {
+        chevronImage.image = isCollapsed ? UIImage.Icons.Chevron.down : UIImage.Icons.Chevron.up
+        chevronImage.transform = CGAffineTransform.identity
     }
 }
 

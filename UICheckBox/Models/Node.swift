@@ -8,7 +8,11 @@
 
 import Foundation
 
-class Node {
+class Node: Equatable {
+    static func == (lhs: Node, rhs: Node) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
     var id: Int
     var title: String
     var children = [Node]()
@@ -16,6 +20,7 @@ class Node {
     var subTitle: String?
     weak var parent: Node?
     var isLastNode: Bool = true
+    var isActive = true
     
     var hasChildren: Bool {
         return !children.isEmpty
@@ -73,5 +78,17 @@ class Node {
         else {
             state = .partialSelected
         }
+    }
+    
+    func getRoot() -> Node? {
+        if parent == nil {
+            return self
+        }
+        return parent?.getRoot()
+    }
+    
+    func hasActiveChildren() -> Bool {
+        let hasActive = children.contains(where: { $0.isActive })
+        return hasActive
     }
 }

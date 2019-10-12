@@ -52,11 +52,15 @@ class HomeViewModel {
     private func updateTableData() {
         var rows = [Row]()
         for level2node in data.children {
-            let row = Row(node: level2node, level: .level2)
-            rows.append(row)
-            for level3Node in level2node.children {
-                let row = Row(node: level3Node, level: .level3)
+            if level2node.isActive {
+                let row = Row(node: level2node, level: .level2)
                 rows.append(row)
+                for level3Node in level2node.children {
+                    if (level3Node.isActive) {
+                        let row = Row(node: level3Node, level: .level3)
+                        rows.append(row)
+                    }
+                }
             }
         }
         
@@ -71,7 +75,7 @@ class HomeViewModel {
     }
     
     func collapseSection(for node: Node, isCollapsed: Bool) -> Int? {
-        guard let sectionIndex = sections.firstIndex(where: { $0.node.id == node.id }) else {
+        guard let sectionIndex = sections.firstIndex(where: { $0.node == node }) else {
             return nil
         }
         let section = sections[sectionIndex]
@@ -81,12 +85,30 @@ class HomeViewModel {
             updateTableData()
         }
         section.isCollapsed = isCollapsed
+        return sectionIndex
+    }
+    
+    func collapseRow(for node: Node, isCollapsed: Bool) -> Int? {
+        guard let root = node.getRoot() else {
+            return nil
+        }
+        guard let sectionIndex = sections.firstIndex(where: {$0.node == root}) else {
+            return nil
+        }
+        print(isCollapsed)
+        node.children.forEach{ $0.isActive = !isCollapsed }
+        
+        updateTableData()
         
         return sectionIndex
     }
 }
 
-class Section {
+class Section: Equatable {
+    static func == (lhs: Section, rhs: Section) -> Bool {
+        return lhs.node == rhs.node
+    }
+    
     var node: Node
     var rows = [Row]()
     var title: String

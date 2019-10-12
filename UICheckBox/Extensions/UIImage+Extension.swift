@@ -16,8 +16,8 @@ extension UIImage {
             static let partialSelected = UIImage(named: "icon_indeterminate")!
         }
         enum Chevron {
-            static let collapsed = UIImage(named: "icon_arrow_collapsed")!.withRenderingMode(.alwaysTemplate)
-            static let expanded = UIImage(named: "icon_arrow_expanded")!.withRenderingMode(.alwaysTemplate)
+            static let up = UIImage(named: "icon_arrow_up")!.withRenderingMode(.alwaysTemplate)
+            static let down = UIImage(named: "icon_arrow_down")!.withRenderingMode(.alwaysTemplate)
         }
     }
 }

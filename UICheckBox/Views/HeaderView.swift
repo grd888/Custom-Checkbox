@@ -8,7 +8,7 @@
 
 import UIKit
 
-protocol HeaderViewDelegate: NSObject {
+protocol NodeSelectionDelegate: NSObject {
     func didSelectNode(_ node: Node)
     func didCollapseSelection(_ node: Node, isCollapsed: Bool)
 }
@@ -19,7 +19,7 @@ class HeaderView: UIView {
     }()
     
     var chevronImage: UIImageView = {
-        let image = UIImage.Icons.Chevron.expanded
+        let image = UIImage.Icons.Chevron.down
         var imageView = UIImageView(image: image)
         imageView.tintColor = .white
         imageView.isUserInteractionEnabled = true
@@ -34,7 +34,7 @@ class HeaderView: UIView {
     }()
     
     var node: Node!
-    var delegate: HeaderViewDelegate?
+    var delegate: NodeSelectionDelegate?
     var isCollapsed = false {
         didSet {
             updateChevronImage()
@@ -112,6 +112,6 @@ class HeaderView: UIView {
     }
     
     private func updateChevronImage() {
-        chevronImage.image = isCollapsed ? UIImage.Icons.Chevron.collapsed : UIImage.Icons.Chevron.expanded
+        chevronImage.image = isCollapsed ? UIImage.Icons.Chevron.down : UIImage.Icons.Chevron.up
     }
 }

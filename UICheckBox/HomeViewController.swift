@@ -94,6 +94,7 @@ extension HomeViewController: UITableViewDataSource {
     func level2Cell(tableView: UITableView, indexPath: IndexPath, row: Row) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: Level2Cell.reuseIdentifier, for: indexPath) as! Level2Cell
         cell.configure(with: row)
+        cell.delegate = self
         return cell
     }
     
@@ -122,13 +123,17 @@ extension HomeViewController: UITableViewDelegate {
     }
 }
 
-extension HomeViewController: HeaderViewDelegate {
+extension HomeViewController: NodeSelectionDelegate {
     func didSelectNode(_ node: Node) {
         viewModel.selectNode(node)
     }
     
     func didCollapseSelection(_ node: Node, isCollapsed: Bool) {
         if let sectionIndex = viewModel.collapseSection(for: node, isCollapsed: isCollapsed) {
+            tableView.reloadSections(IndexSet(integer: sectionIndex), with: .automatic)
+            return
+        }
+        if let sectionIndex = viewModel.collapseRow(for: node, isCollapsed: isCollapsed) {
             tableView.reloadSections(IndexSet(integer: sectionIndex), with: .automatic)
         }
     }
